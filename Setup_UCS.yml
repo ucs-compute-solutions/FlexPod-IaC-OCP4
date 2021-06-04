@@ -1,0 +1,58 @@
+---
+# Playbook to setup UCS Server and SAN configurations
+#
+- hosts: ucs
+  connection: local
+  collections:
+  - cisco.ucs
+  gather_facts: no
+
+  roles:
+    #
+    ### Create Configurations under Admin Tab in UCS
+    #
+    # DNS
+    # NTP
+    # Timezone
+    # Organization
+    - UCSadmin
+    #
+    ### Create Configurations under Equipment Tab in UCS
+    # 
+    # Server Port Auto Discovery
+    # UCS Chassis Globabal Policy
+    # UCS Server and Uplink Ports
+    # UCS Uplink Port Channel
+    - UCSequipment
+    #
+    ### Create Configurations under LAN Tab in UCS
+    # 
+    # Configure Management IP Pool
+    # Configure VLANs in UCS
+    # Configure UCS MAC Pools A and B
+    # Configure Network Control Policies to enable CDP and LLDP
+    # Linux Adapter Policy for High Traffic
+    # Configure vNIC Template for all vNICs except iSCSI vNICs
+    # Configure vNIC Template for iSCSI vNICs
+    # Configure iSCSI LAN Connectivity Policy 
+    - UCSlan
+    #
+    ### Create Configurations under Storage Tab in UCS
+    #
+    # Configure Disk Group Policy
+    # Configure Storage Profile
+    - UCSstorage
+    #
+    ### Create Configurations under Server Tab in UCS
+    #
+    # UUID pools
+    # Server Pool Configuration
+    # Power Control Policy - No Power CAP
+    # Modify default Maintenence policy - Add User Ack for reboot
+    # VMware High Traffic Adapter Policy for VDS
+    # Local Disk Policy - Ignore Local Disks
+    # BIOS Policy
+    # iSCSI Boot Policy (if required)
+    # iSCSI Service Profile Template (if required)
+    # FCP Boot Policy (if required)
+    - UCSserver

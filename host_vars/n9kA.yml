@@ -1,0 +1,42 @@
+---
+vpc_source: 192.168.156.21
+vpc_destination: 192.168.156.22
+vpc_role_priority: "10"
+Baremetal_ntp_dist_IP: '10.1.156.11/24'
+# Interface Lists; more interfaces can be added for additional BW
+#
+mgmt_interface_list:
+  - interface: "Ethernet1/54"
+    description: "Uplink-SW"
+
+peerlink_interface_list:
+  - interface:  "Ethernet1/49"
+    description: "N9K-B:Eth1/49"
+  - interface:  "Ethernet1/50"
+    description: "N9K-B:Eth1/50"
+#
+FI_A_interface_list:
+  - interface:  "Ethernet1/21"
+    description: "FI-A:Eth1/45"
+  - interface:  "Ethernet1/22"
+    description: "FI-A:Eth1/46"
+#
+FI_B_interface_list:
+  - interface:  "Ethernet1/23"
+    description: "FI-B:Eth1/45"
+  - interface:  "Ethernet1/24"
+    description: "FI-B:Eth1/46"
+#
+storage_A_interface_list:
+  - interface:  "Ethernet1/17"
+    description: "Storage-01:e0e"
+  - interface:  "Ethernet1/18"
+    description: "Storage-01:e0f"
+#
+storage_B_interface_list:
+  - interface:  "Ethernet1/19"
+    description: "Storage-02:e0e"
+  - interface:  "Ethernet1/20"
+    description: "Storage-02:e0f"
+#
+all_interfaces: "{{ mgmt_interface_list + peerlink_interface_list + FI_A_interface_list + FI_B_interface_list + storage_A_interface_list + storage_B_interface_list }}"

@@ -1,0 +1,20 @@
+---
+  #  Add PMEM Policy to Service Profile Template
+  #
+  #  Add "App-Direct-Mode" PMEM Policy to Worker Node SPT`
+  #
+  - name: Add PMEM Policy to SPT
+    ucs_managed_objects:
+      hostname: "{{ inventory_hostname }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      objects:
+        - {
+            "module": "ucsmsdk.mometa.ls.LsServer",
+            "class": "LsServer",
+            "properties": {
+                "parent_mo_or_dn": "org-root/org-{{ organization}}",
+                "name": "{{ Worker_SPT_name }}",
+                "persistent_memory_policy_name": "App-Direct-Mode"
+            },
+          }

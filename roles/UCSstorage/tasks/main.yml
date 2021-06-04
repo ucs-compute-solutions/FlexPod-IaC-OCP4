@@ -1,0 +1,8 @@
+---
+# Storage Tasks Configuration for M.2-Booted UCSM
+# Variables can be modified under ../defaults/main.yml
+#
+# Configure Disk Group Policy
+- include_tasks: configure_ucs_disk_group_policy.yml
+# Configure Storage Profile
+- include_tasks: configure_ucs_storage_profile.yml

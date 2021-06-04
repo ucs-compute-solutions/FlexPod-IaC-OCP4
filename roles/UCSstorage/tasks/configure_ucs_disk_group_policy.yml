@@ -1,0 +1,16 @@
+---
+    # Disk Group Policy for RAID 1 Mirror of 960GB M.2 Disks 
+
+      - name: Configure Disk Group Policy for M.2 Disks
+        ucs_disk_group_policy:
+          hostname: "{{ inventory_hostname }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+          name: "{{ disk_pol_name }}"
+          raid_level: mirror
+          configuration_mode: manual
+          manual_disks:
+          - slot_num: '253'
+            role: normal
+          - slot_num: '254'
+            role: normal

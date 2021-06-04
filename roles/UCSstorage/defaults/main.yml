@@ -1,0 +1,7 @@
+---
+# Variables for Storage tab configurations of UCSM
+#
+# Disk Group Policy Name
+disk_pol_name: 'M2-Disk-Grp'
+# Storage Profile Name
+storage_profile_name: 'M2-Stg-Prfl'

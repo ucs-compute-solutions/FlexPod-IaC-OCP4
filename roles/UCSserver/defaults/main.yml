@@ -1,0 +1,80 @@
+---
+# Variables for Server configurations of UCSM
+# Adjust the variable values as per your requirements
+
+# Assignment order for various pool parameters
+server_assign_order: 'sequential'
+# To add or remove certain parameters
+server_state: 'present'
+
+# UUID Pool Information
+uuid_pool_name: UUID-Pool
+uuid_start: '0000-0000A1300001'
+uuid_end: '0000-0000A13000FF'
+
+# Server Pool Information
+server_pool_name: 'OCP-Pool'
+# Comment out a list to ignore the rack or blade configuration in the server pools
+# Add additional servers or blades to the list using the same format.
+#
+# C-Series Rack Servers
+rack_list:
+  - id: '1'
+  - id: '2'
+  - id: '3'
+#
+#B-Series Blade Servers
+blade_list:
+  - chassis_number: '1'
+    slot_number: '3'
+  - chassis_number: '1'
+    slot_number: '4'
+  - chassis_number: '1'
+    slot_number: '7'
+#
+# Power Control Policy
+power_policy_name: 'No-PowerCap'
+#
+# BIOS Policy
+bios_policy_name: 'OCP-Host'
+bios_setting_list:
+  - name: 'Enable CDN Control'
+    mo_token: 'tokn-featr-Consistent Device Name Control/tokn-param-cdnEnable'
+    mo_setting: 'Enabled'
+  - name: 'Disable Quiet Boot'
+    mo_token: 'tokn-featr-Quiet Boot/tokn-param-QuietBoot'
+    mo_setting: 'Disabled'
+  - name: 'Disable Processor C State'
+    mo_token: 'tokn-featr-Processor C State/tokn-param-ProcessorCstate'
+    mo_setting: 'Disabled'
+  - name: 'Disable Processor C1E'
+    mo_token: 'tokn-featr-Processor C1E/tokn-param-ProcessorC1E'
+    mo_setting: 'Disabled'
+  - name: 'Disable Processor C3 Report'
+    mo_token: 'tokn-featr-Processor C3 Report/tokn-param-ProcessorC3Report'
+    mo_setting: 'Disabled'
+  - name: 'Disable Processor C6 Report'
+    mo_token: 'tokn-featr-Processor C6 Report/tokn-param-ProcessorC6Report'
+    mo_setting: 'Disabled'
+  - name: 'Disable Processor C7 Report'
+    mo_token: 'tokn-featr-Processor C7 Report/tokn-param-ProcessorC7Report'
+    mo_setting: 'Disabled'
+  - name: 'Processor Energy Configuration - Custom'
+    mo_token: 'tokn-featr-Processor Energy Configuration/tokn-param-CPUPowerManagement'
+    mo_setting: 'Custom'
+  - name: 'NVM Performance Setting - Balanced-Profile'
+    mo_token: 'tokn-featr-NVM Performance Setting/tokn-param-NvmdimmPerformConfig'
+    mo_setting: 'Balanced-Profile'
+#
+# M.2 Boot Policy
+m2_boot_policy_name: 'Boot-M2'
+#
+# IPMI/Redfish Access Profile
+ipmi_pol_name: 'IPMI-Profile'
+ipmi_user_id: 'ipmiadmin'
+ipmi_password: "{{ password }}"
+#
+# Service Profile Templates
+Master_SPT_name: 'OCP-Master'
+Worker_SPT_name: 'OCP-Worker'
+#

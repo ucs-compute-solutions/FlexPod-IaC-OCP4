@@ -1,0 +1,15 @@
+---
+# Global Variables for UCS Configurations
+# These Variables are used across different roles in UCS configurations
+# e.g. "organization" is used under san, lan, server and admin roles
+# Adjust the variable values as per your requirements
+
+#
+#UCS Organization
+organization: 'OCP'
+# Linux High Traffic Adapter Policy
+adapter_policy_name: 'Linux-HighTrf'
+#
+# LAN Connectivity Policy Parameters
+master_lan_conn_policy: 'OCP-Master'
+worker_lan_conn_policy: 'OCP-Worker'

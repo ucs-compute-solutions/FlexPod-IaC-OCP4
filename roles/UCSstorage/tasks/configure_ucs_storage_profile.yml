@@ -1,0 +1,12 @@
+---
+    # Storage Profile for RAID 1 Mirror of 960GB M.2 Disks 
+      - name: Configure Storage Profile for M.2 Disks
+        ucs_storage_profile:
+          hostname: "{{ inventory_hostname }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+          name: "{{ storage_profile_name }}"
+          local_luns:
+          - name: Boot-LUN
+            expand_to_avail: yes
+            disk_policy_name: "{{ disk_pol_name }}"

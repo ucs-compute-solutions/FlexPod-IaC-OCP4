@@ -1,0 +1,10 @@
+[ucs]
+192.168.156.20 username=admin password=password
+
+[nexus]
+n9kA ansible_host=192.168.156.21 ansible_user=admin ansible_password=password ansible_network_os=nxos
+n9kB ansible_host=192.168.156.22 ansible_user=admin ansible_password=password ansible_network_os=nxos
+
+[ontap]
+#ONTAP Cluster Management IP. List only one ONTAP cluster IP.
+192.168.156.60

@@ -1,0 +1,46 @@
+---
+  # Configure Service Profile Templates for OCP M.2 Boot
+
+  # OCP Master Service Profile Template
+  #
+  - name: Configure Service Profile Template for OCP Master Nodes
+    ucs_service_profile_template:
+      hostname: "{{ inventory_hostname }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      name: "{{ Master_SPT_name }}"
+      org_dn: "org-root/org-{{ organization }}"
+      template_type: 'updating-template'
+      uuid_pool: "{{ uuid_pool_name }}"
+      lan_connectivity_policy: "{{ master_lan_conn_policy }}"
+      boot_policy: "{{ m2_boot_policy_name }}"
+      maintenance_policy: 'default'
+      power_control_policy: "{{ power_policy_name }}"
+      storage_profile: "{{ storage_profile_name }}" 
+      server_pool: "{{ server_pool_name }}"
+      bios_policy: "{{ bios_policy_name }}"
+      host_firmware_package: 'default'
+      ipmi_access_profile: "{{ ipmi_pol_name }}"
+      power_state: down
+  #
+  - name: Configure Service Profile Template for OCP Worker Nodes
+    ucs_service_profile_template:
+      hostname: "{{ inventory_hostname }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      name: "{{ Worker_SPT_name }}"
+      org_dn: "org-root/org-{{ organization }}"
+      template_type: 'updating-template'
+      uuid_pool: "{{ uuid_pool_name }}"
+      lan_connectivity_policy: "{{ worker_lan_conn_policy }}"
+      boot_policy: "{{ m2_boot_policy_name }}"
+      maintenance_policy: 'default'
+      power_control_policy: "{{ power_policy_name }}"
+      storage_profile: "{{ storage_profile_name }}"
+      server_pool: "{{ server_pool_name }}"
+      bios_policy: "{{ bios_policy_name }}"
+      host_firmware_package: 'default'
+      ipmi_access_profile: "{{ ipmi_pol_name }}"
+      power_state: down
+  #
+

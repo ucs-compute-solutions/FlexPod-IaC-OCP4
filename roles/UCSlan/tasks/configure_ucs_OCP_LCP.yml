@@ -1,0 +1,52 @@
+---
+# Configure OCP LAN Connectivity Policies
+#
+- name: Configure OCP Worker LAN Connectivity Policy
+  ucs_lan_connectivity:
+    hostname: "{{ inventory_hostname }}"
+    username: "{{ username }}"
+    password: "{{ password }}"
+    name: "{{ worker_lan_conn_policy }}"
+    org_dn: org-root/org-{{ organization }}
+    vnic_list:
+    - name: 01-{{ vnic_template_list[0].name }}
+      vnic_template: "{{ vnic_template_list[0].name}}"
+      adapter_policy: 'Linux'
+      order: '1'
+    - name: 02-{{ vnic_template_list[1].name }}
+      vnic_template: "{{ vnic_template_list[1].name}}"
+      adapter_policy: 'Linux'
+      order: '2'
+    - name: 03-{{ vnic_template_list[2].name }}
+      vnic_template: "{{ vnic_template_list[2].name}}"
+      adapter_policy: 'Linux'
+      order: '3'
+    - name: 04-{{ vnic_template_list[3].name }}
+      vnic_template: "{{ vnic_template_list[3].name}}"
+      adapter_policy: 'Linux-HighTrf'
+      order: '4'
+    - name: 05-{{ iscsi_template_list[0].name }}
+      vnic_template: "{{ iscsi_template_list[0].name}}"
+      adapter_policy: 'Linux-HighTrf'
+      order: '5'
+    - name: 06-{{ iscsi_template_list[1].name }}
+      vnic_template: "{{ iscsi_template_list[1].name}}"
+      adapter_policy: 'Linux-HighTrf'
+      order: '6'
+#
+- name: Configure OCP Master LAN Connectivity Policy
+  ucs_lan_connectivity:
+    hostname: "{{ inventory_hostname }}"
+    username: "{{ username }}"
+    password: "{{ password }}"
+    name: "{{ master_lan_conn_policy }}"
+    org_dn: org-root/org-{{ organization }}
+    vnic_list:
+    - name: 01-{{ vnic_template_list[0].name }}
+      vnic_template: "{{ vnic_template_list[0].name}}"
+      adapter_policy: 'Linux'
+      order: '1'
+    - name: 02-{{ vnic_template_list[1].name }}
+      vnic_template: "{{ vnic_template_list[1].name}}"
+      adapter_policy: 'Linux'
+      order: '2'

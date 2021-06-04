@@ -1,0 +1,125 @@
+---
+# Variables for LAN configurations of UCSM
+# Adjust the variable values as per your requirements
+
+#lan_state should be set to 'present' to configure the objects and 'absent' to delete the object.
+# In this current framework, this feature is not tested. The value MUST be set to 'present'
+lan_state : 'present'
+#Assignment order for various IP and MAC pools
+lan_assign_order: 'sequential'
+
+#Management IP address Pool configuration
+mgmt_pool_name: "ext-mgmt"
+mgmt_first_ip: '192.168.156.234'
+mgmt_last_ip: '192.168.156.251'
+mgmt_subnet_mask: '255.255.255.0'
+mgmt_default_gw: '192.168.156.254'
+#
+#vlan_list contains all the required VLANs. This list can be modified to add, remove or change the VLANs.
+#The default VLAN IDs and VLAN Names are selected but can be changed.
+#
+# MAC Address Pool information for Fabric-A and B
+#
+mac_pool_list:
+  - name: MAC-Pool-A
+    first_mac: 00:25:B5:A1:3A:00
+    last_mac: 00:25:B5:A1:3A:FF
+  - name: MAC-Pool-B
+    first_mac: 00:25:B5:A1:3B:00
+    last_mac: 00:25:B5:A1:3B:FF
+#
+# Following VLAN Lists are defined for vNIC Template Usage.
+# These lists outlines which VLANs are part of a particular vNIC Template
+# In the case of OCP, one VLAN is defined per vNIC and set as Native
+#
+# VLANs for Provisioning vNIC Template
+#
+Provisioning_vlan_list:
+    # Provisioning VLAN
+  - name: "{{ provisioning_vlan_name }}"
+    native: 'yes'
+#
+# VLANs for Baremetal vNIC Template
+#
+Baremetal_vlan_list:
+    # Baremetal VLAN
+  - name: "{{ baremetal_vlan_name }}"
+    native: 'yes'
+#
+# VLANs for VM Traffic vNIC Template
+#
+vm_traffic_vlan_list:
+    # VM Traffic VLAN
+  - name: "{{ vm_traffic_vlan_name }}"
+    native: 'yes'
+#
+# VLANs for Persistent NFS vNIC Template
+#
+Persistent_NFS_vlan_list:
+    # Persistent NFS VLAN
+  - name: "{{ persistent_nfs_vlan_name }}"
+    native: 'yes'
+#
+
+# VLAN for iSCSI-A vNIC Template
+#
+iSCSI_a_vlan_list:
+    # Set iSCSI-A vlan as Native VLAN
+  - name: "{{ iscsiA_vlan_name }}"
+    native: 'yes'
+#
+# VLAN for iSCSI-B vNIC Template
+#
+iSCSI_b_vlan_list:
+    # Set iSCSI-B vlan as Native VLAN
+  - name: "{{ iscsiB_vlan_name }}"
+    native: 'yes'
+#
+#Network Control Policy
+NCP_name: Enable-CDP-LLDP
+NCP_cdp: 'enabled'
+NCP_lldp: 'enabled'
+#
+#vNIC Template List for all the vnics except iSCSI vNICs
+#
+Mac_Pool_A_Name: "{{ mac_pool_list[0].name }}"
+Mac_Pool_B_Name: "{{ mac_pool_list[1].name }}"
+
+vnic_template_list:
+  - name: 'Prov-A'
+    fabric: 'A-B'
+    mac_pool: "{{ Mac_Pool_A_Name }}"
+    redundancy_type: 'none'
+    vlans: "{{ Provisioning_vlan_list }}"
+    mtu: '1500'
+  - name: 'Baremetal-B'
+    fabric: 'B-A'
+    mac_pool: "{{ Mac_Pool_B_Name }}"
+    redundancy_type: 'none'
+    vlans: "{{ Baremetal_vlan_list }}"
+    mtu: '1500'
+  - name: 'VM-Traffic-A'
+    fabric: 'A-B'
+    mac_pool: "{{ Mac_Pool_A_Name }}"
+    redundancy_type: 'none'
+    vlans: "{{ vm_traffic_vlan_list }}"
+    mtu: '1500'
+  - name: 'Persnt_NFS-B'
+    fabric: 'B-A'
+    mac_pool: "{{ Mac_Pool_B_Name }}"
+    redundancy_type: 'none'
+    vlans: "{{ Persistent_NFS_vlan_list }}"
+    mtu: '9000'
+# iSCSI vNIC Template List 
+#
+iscsi_template_list:
+  - name: 'iSCSI-A'
+    fabric: 'A'
+    mac_pool: "{{ Mac_Pool_A_Name }}"
+    vlans: "{{ iSCSI_a_vlan_list }}"
+    mtu: '9000'
+  - name: 'iSCSI-B'
+    fabric: 'B'
+    mac_pool: "{{ Mac_Pool_B_Name }}"
+    vlans: "{{ iSCSI_b_vlan_list }}"
+    mtu: '9000'

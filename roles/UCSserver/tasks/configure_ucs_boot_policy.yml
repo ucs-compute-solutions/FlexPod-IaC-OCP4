@@ -1,0 +1,81 @@
+---
+  # Configure M.2 Boot Policy
+  #
+  # M.2 Boot Policy
+  #
+  - name: Create M.2 Boot Policy
+    ucs_managed_objects:
+      hostname: "{{ inventory_hostname }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      objects:
+        - {
+            "module": "ucsmsdk.mometa.lsboot.LsbootPolicy",
+            "class": "LsbootPolicy",
+            "properties": {
+                "parent_mo_or_dn": "org-root/org-{{ organization}}",
+                "name": "{{ m2_boot_policy_name }}",
+                "enforce_vnic_name": "yes",
+                "boot_mode": "uefi",
+                "reboot_on_update": "no"
+            },
+            "children": [
+                {
+                  "module": "ucsmsdk.mometa.lsboot.LsbootBootSecurity",
+                  "class": "LsbootBootSecurity",
+                  "properties": {
+                      "secure_boot": "no"
+                  }
+                },
+                {
+                  "module": "ucsmsdk.mometa.lsboot.LsbootLan",
+                  "class": "LsbootLan",
+                  "properties": {
+                      "order": "1"
+                  },
+                  "children": [
+                      {
+                          "module": "ucsmsdk.mometa.lsboot.LsbootLanImagePath",
+                          "class": "LsbootLanImagePath",
+                          "properties": {
+                              "ip_addr_type": "ipv4",
+                              "type": "primary",
+                              "vnic_name": "01-{{ vnic_template_list[0].name }}"
+                          },
+                      },
+                  ]
+                },
+                {
+                  "module": "ucsmsdk.mometa.lsboot.LsbootStorage",
+                  "class": "LsbootStorage",
+                  "properties": {
+                      "order": "2"
+                  },
+                  "children": [
+                      {
+                          "module": "ucsmsdk.mometa.lsboot.LsbootLocalStorage",
+                          "class": "LsbootLocalStorage",
+                          "properties": {},
+                      "children": [
+                          {
+                              "module": "ucsmsdk.mometa.lsboot.LsbootEmbeddedLocalLunImage",
+                              "class": "LsbootEmbeddedLocalLunImage",
+                              "properties": {
+                                  "order": "2"
+                              },
+                          },
+                          ]
+                      }
+                      ]
+                 },
+              {
+                  "module": "ucsmsdk.mometa.lsboot.LsbootVirtualMedia",
+                  "class": "LsbootVirtualMedia",
+                  "properties": {
+                      "access": "read-only-remote",
+                      "lun_id": "0",
+                      "order": "3"
+                  },
+               }, 
+             ]
+           }
