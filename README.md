@@ -26,7 +26,7 @@ Setup all the variables before executing the playbooks as detailed in the CVD: h
 
 1.	Setup LAN on Nexus and UCS: "ansible-playbook ./Setup_LAN_Connectivity.yml -i inventory"
 2.	Setup Cisco UCS: "ansible-playbook ./Setup_UCS.yml -i inventory"
-3.	Setup NetApp AFF: "ansible-playbook ./Setup_NetApp.yml -i inventory"
+3.	Setup NetApp AFF: "ansible-playbook ./Setup_ONTAP.yml -i inventory"
 4.	Setup OCP 4 Cluster using IPI install: "ansible-playbook -i inventory/hosts playbook.yml 
 
 
