@@ -1,0 +1,15 @@
+---
+- name: Configure ONTAP for FlexPod OpenShift Container Platform 4.7 - Bare-Metal
+  hosts: ontap
+  gather_facts: False
+  vars_files:
+    - vars/ontap_main.yml
+  connection: local
+  roles:
+  - { role: ONTAP/ontap_primary_setup, tags: [ 'ontap_primary_setup' ] }
+  - { role: ONTAP/ontap_network, tags: [ 'ontap_network' ] }
+  - { role: ONTAP/ontap_svm, tags: [ 'ontap_svm' ] }
+  - { role: ONTAP/ontap_volumes, tags: [ 'ontap_volumes' ] }
+  - { role: ONTAP/ontap_lifs, tags: [ 'ontap_lifs' ] }
+  tags:
+  - ontap_config
