@@ -1,0 +1,7 @@
+# Credentials for connecting to the ONTAP Cluster
+username: admin
+password: password
+
+# Management IP Addresses of the two nodes in the ONTAP Cluster
+ontap_a: 192.168.10.10
+ontap_b: 192.168.10.20
