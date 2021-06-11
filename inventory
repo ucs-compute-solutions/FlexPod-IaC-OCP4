@@ -7,4 +7,4 @@ n9kB ansible_host=192.168.156.22 ansible_user=admin ansible_password=password an
 
 [ontap]
 #ONTAP Cluster Management IP. List only one ONTAP cluster IP.
-192.168.156.60
+192.166.10.5 #Sample
