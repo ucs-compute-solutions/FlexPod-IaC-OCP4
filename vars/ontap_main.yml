@@ -1,0 +1,155 @@
+---
+# Role variables as per NetApp's prescriptive guidance
+# This can be overridden by a var-file.yml at the command line
+# User's input variables
+
+#Name of the ONTAP Cluster
+cluster_name: a400-cluster
+
+#Names of the Nodes in the ONTAP Cluster
+nodes: 
+ - a400-cluster-01
+ - a400-cluster-02
+
+#List the names of the nodes and all their ports that will be used (Do not include Cluster Ports)
+#These portnames are used to remove them from default broadcast domain created during cluster setup
+node_ports:
+  - {node_name: "a400-cluster-01", ports: ["e0e","e0f","e0g","e0h"]}
+  - {node_name: "a400-cluster-02", ports: ["e0e","e0f","e0g","e0h"]}
+
+#List the names of the nodes and all their ports that will be used for data traffic
+#This should not include cluster and UTA ports used as fc target
+node_data_ports:
+  - {node_name: "a400-cluster-01", ports: ["e0e","e0f","e0g","e0h"]}
+  - {node_name: "a400-cluster-02", ports: ["e0e","e0f","e0g","e0h"]}
+
+#Enter the count of the total number of ports in the cluster that will be used for data traffic, exclude cluster ports and management ports from the count
+total_port_count: 8
+
+# Network settings for the Service processor
+sp:
+  - {node: "a400-cluster-01", ip: "", mask: "", gateway: ""}
+  - {node: "a400-cluster-02", ip: "", mask: "", gateway: ""}
+
+#List the ONTAP Licenses for the different features that you need
+ontap_license:
+  - <license_key_1>
+  - <license_key_2>
+  - <license_key_3>
+  - <license_key_4> #Add more rows for additional license keys
+
+#Details of the Data Aggregates that need to be created
+#If Aggregate creation takes longer, subsequent tasks of creating volumes may fail.
+#There should be enough disks already zeroed in the cluster, otherwise aggregate create will zero the disks and will take long time
+data_aggregates:
+  - {aggr_name: aggr01_node01, diskcount: 10}
+  - {aggr_name: aggr01_node02, diskcount: 10}
+
+#Name of the Interface group to be created
+ifgrp_name: a0a
+
+ifgrp_mode: multimode_lacp
+
+ontap_vlan_state: present
+
+#Details of the NFS LIFs to be created for the OpenShift SVM
+ocp_nfs_lifs:
+  - {name: ocp_nfs_lif01, address: 192.168.20.10, netmask: 255.255.255.0, home_node: "a400-cluster-01"}
+  - {name: ocp_nfs_lif02, address: 192.168.20.20, netmask: 255.255.255.0, home_node: "a400-cluster-02"}
+
+#Client match for the export policy rule, that is used by the SVM network to present the persistent storage to OCP
+#This will the Persistent NFS network that is assigned to the Kubernetes worker nodes
+client_match: 192.168.20.0/24
+
+#Data Protocol to be used for export policy rules
+data_protocol: nfs
+
+#SVM Management LIF Details
+ocp_svm_specs:
+  - {home_port: e0M, address: 192.168.10.25, netmask: 255.255.255.0, gateway: 192.168.10.254, lif_name: ocp_svm_mgmt}
+
+# Following two variables are used in a task to ensure auto revert for cluster management LIF is set to True.
+cluster_mgmt_auto_revert: true
+
+# Cluster management LIF already exists (pre-requisite), so note down name of cluster management LIF and enter below.
+cluster_mgmt_interface: cluster_mgmt
+
+#Name of SVM created for OCP data services
+ocp_svm: OCP-SVM
+
+#Password for vsadmin user of OCP SVM
+vsadmin_password: <password>
+
+#List of aggregates for OCP SVM
+aggr_list: [] #DO NOT UPDATE, for system use
+
+# Root volume for OCP svm
+ocp_root_volume: ocp_root
+
+#Create root mirror volumes for OCP SVM
+mirror_volumes:
+  - {mirror_volume: ocp_rootvol_m01}
+  - {mirror_volume: ocp_rootvol_m02}
+
+#Job Schedule
+job_schedule:
+  - {job_name: 15min,job_minutes: 15}
+
+#Details for configuring NetApp AutoSupport
+autosupport_vars:
+  mail_hosts: "ftp.flexpod.com"
+  noteto: "ocp_admin@flexpod.com"
+
+#Management VLANs for all components
+#Add additional rows for vlans as necessary
+primary_vlans:
+   - {vlan_id: 13, name: "management"}
+
+#Storage VLANs
+#Add additional rows for vlans as necessary
+storage_vlans:
+   - {vlan_id: "3014", name: "OCP_iSCSI_A", protocol: "iSCSI"}
+   - {vlan_id: "3024", name: "OCP_iSCSI_B", protocol: "iSCSI"}
+   - {vlan_id: "3154", name: "OCP_NFS", protocol: "NFS"}
+
+#iSCSI LIfs on Node 1 of the cluster for OCP data
+iscsi_lifs_node01:
+  - {name: ocp_iscsi_lif01a, address: 192.168.30.10, netmask: 255.255.255.0}
+  - {name: ocp_iscsi_lif01b, address: 192.168.40.10, netmask: 255.255.255.0}
+
+#iSCSI LIfs on Node 2 of the cluster for OCP data
+iscsi_lifs_node02:
+  - {name: ocp_iscsi_lif02a, address: 192.168.30.20, netmask: 255.255.255.0}
+  - {name: ocp_iscsi_lif02b, address: 192.168.40.20, netmask: 255.255.255.0}
+
+#List the protocols that will need to be allowed on the OCP Storage Virtual Machine
+#This variable is also used to configure other infrastructure components for appropriate protocols
+allowed_protocols:
+  - nfs
+  - iscsi
+
+#NTP Server across all the components
+#Route to NTP server must exist from each device in the infrastructure
+ntp_server:
+  - 192.168.10.1
+  - 192.168.10.100
+
+# DNS Servers across all the components
+#Route to DNS server must exist from each device in the infrastructure
+dns_server:
+  - 192.168.10.250
+  - 192.168.10.251
+
+#DNS Domain Name
+dns_domain: "ocp.flexpod.com"
+
+#Time zone names are from the L(tz database,https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+timezone: "America/New_York"
+
+#SNMP related variables
+enable_snmp: true
+#Please make sure to fill out the below details if you have chosen to enable SNMP, leaving it empty will cause the setup to fail
+snmp_contact: "Administrator"
+snmp_location: ""
+traphost_ip: 
+snmp_community: "FlexPod-OCP"
