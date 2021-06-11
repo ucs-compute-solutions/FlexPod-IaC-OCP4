@@ -1,0 +1,167 @@
+# Create LIFs for OCP NFS access
+- name: Create LIF(s) for NFS access
+  na_ontap_interface: 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    state: present 
+    vserver: "{{ocp_svm}}" 
+    role: data 
+    protocols: nfs 
+    home_node: "{{ item.1.home_node }}" 
+    home_port: a0a-{{item.0.vlan_id}} 
+    address: "{{ item.1.address }}" 
+    netmask: "{{ item.1.netmask }}" 
+    interface_name: "{{ item.1.name }}" 
+    admin_status: up 
+    failover_policy: broadcast-domain-wide 
+    firewall_policy: data 
+    is_auto_revert: true 
+    https: true 
+    validate_certs: false
+  with_nested:
+    - "{{ storage_vlans }}"
+    - "{{ ocp_nfs_lifs }}"
+  when: 
+    - "('nfs' in allowed_protocols)"
+    - item.0.protocol == "NFS"
+  tags:
+    - ontap_nfs_lif
+
+# Create iSCSI LIF(s) on Node01
+- name: Create iSCSI LIF(s) on Node01
+  na_ontap_interface: 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    state: present 
+    vserver: "{{ocp_svm}}" 
+    role: data 
+    protocols: "{{item.1.protocol}}" 
+    home_node: "{{node_data_ports[0].node_name}}" 
+    home_port: a0a-{{item.1.vlan_id}} 
+    address: "{{item.0.address}}" 
+    netmask: "{{item.0.netmask}}" 
+    interface_name: "{{item.0.name}}" 
+    admin_status: up 
+    failover_policy: disabled 
+    firewall_policy: data 
+    is_auto_revert: false 
+    https: true 
+    validate_certs: false
+  with_together:
+    - "{{iscsi_lifs_node01}}"
+    - "{{storage_vlans}}"
+  when: 
+    - "('iscsi' in allowed_protocols)"
+    - item.1.protocol == "iSCSI"
+  tags:
+    - ontap_iscsi_lif
+
+# Create iSCSI LIF(s) on Node02
+- name: Create iSCSI LIF(s) on Node02
+  na_ontap_interface: 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    state: present 
+    vserver: "{{ocp_svm}}" 
+    role: data 
+    protocols: "{{item.1.protocol}}" 
+    home_node: "{{node_data_ports[1].node_name}}" 
+    home_port: a0a-{{item.1.vlan_id}} 
+    address: "{{item.0.address}}" 
+    netmask: "{{item.0.netmask}}" 
+    interface_name: "{{item.0.name}}" 
+    admin_status: up 
+    failover_policy: disabled 
+    firewall_policy: data 
+    is_auto_revert: false 
+    https: true 
+    validate_certs: false
+  with_together:
+    - "{{iscsi_lifs_node02}}"
+    - "{{storage_vlans}}"
+  when: 
+    - "('iscsi' in allowed_protocols)"
+    - item.1.protocol == "iSCSI"
+  tags:
+    - ontap_iscsi_lif
+
+#Create Storage Virtual Machine Management LIF
+- name: Create LIF for SVM Management 
+  na_ontap_interface: 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    state: present 
+    vserver: "{{ocp_svm}}" 
+    role: data 
+    protocols: none 
+    home_node: "{{node_data_ports[0].node_name}}" 
+    home_port: "{{item.home_port}}" 
+    address: "{{item.address}}" 
+    netmask: "{{item.netmask}}" 
+    interface_name: "{{item.lif_name}}" 
+    admin_status: up 
+    failover_policy: broadcast-domain-wide 
+    firewall_policy: mgmt 
+    is_auto_revert: true 
+    https: true 
+    validate_certs: false
+  with_items:
+    - "{{ocp_svm_specs}}"
+  tags:
+    - ontap_svm_mgmt_lif
+
+# Create a default route for the OCP SVM
+- name: Create a default route for the OCP SVM
+  na_ontap_net_routes:
+    state: present
+    vserver: "{{ocp_svm}}"
+    destination: "0.0.0.0/0"
+    gateway: "{{item.gateway}}"
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    https: true
+    validate_certs: false
+  with_items:
+    - "{{ocp_svm_specs}}"
+  tags:
+    - ontap_svm_default_route
+
+# Configure DNS for OCP SVM
+- name: Configure DNS for OCP SVM
+  na_ontap_dns: 
+    state: present 
+    vserver: "{{ocp_svm}}" 
+    nameservers: "{{dns_server}}" 
+    domains: "{{dns_domain}}" 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    skip_validation: true
+    https: true 
+    validate_certs: false 
+  tags:
+    - ontap_config_dns_infra
+
+# Waiting for configuration to update
+- name: Waiting for configuration to update
+  pause:
+    seconds: 90 
+
+# Delete the residual Default broadcast domains with ifgroups
+- name: Delete the residual default broadcast domains with ifgroups
+  na_ontap_broadcast_domain:
+    state: absent
+    name: "{{item}}"
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    https: true
+    validate_certs: false
+  with_sequence: start=1 end=2 format=Default-%01x
+  tags:
+    - ontap_config_delete_residual_broadcast_domain

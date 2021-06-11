@@ -1,0 +1,20 @@
+#Create the Export policy rule on the Workload SVM to be used by Trident
+- name: Create the export policy rules
+  na_ontap_export_policy_rule: 
+    state: present 
+    vserver: "{{ocp_svm}}" 
+    policy_name: default 
+    client_match: "{{client_match}}" 
+    protocol: "{{data_protocol}}" 
+    ro_rule: sys 
+    rw_rule: sys 
+    super_user_security: sys 
+    allow_suid: False 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}"
+    https: true 
+    validate_certs: false
+  tags:
+    - ontap_export_policy_rule
+

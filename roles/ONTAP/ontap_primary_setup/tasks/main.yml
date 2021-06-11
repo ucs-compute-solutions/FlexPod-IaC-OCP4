@@ -1,0 +1,313 @@
+---
+# Ensure that the auto-revert parameter is set for the cluster management interface
+- name: Ensure auto-revert is set for the cluster management interface
+  na_ontap_interface: 
+    vserver: "{{cluster_name}}" 
+    is_auto_revert: "{{cluster_mgmt_auto_revert}}" 
+    interface_name: "{{cluster_mgmt_interface}}" 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false
+  tags:
+    - ontap_config_cluster_mgmt
+
+#Delete the Default broadcast domains with data ports
+- name: Delete the default broadcast domains auto created by ONTAP
+  na_ontap_broadcast_domain:
+    state: absent
+    name: "{{item}}"
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    https: true
+    validate_certs: false
+  with_sequence: start=1 end="{{ total_port_count }}" format=Default-%01x
+  tags:
+    - ontap_config_delete_default_broadcast_domain
+
+#Set up the service processor network interface
+- name: Set the Service processor network interface
+  na_ontap_service_processor_network:  
+    state: present 
+    ip_address: "{{item.ip}}" 
+    netmask: "{{item.mask}}" 
+    gateway_ip_address: "{{item.gateway}}" 
+    node: "{{item.node}}" 
+    is_enabled: true 
+    address_type: ipv4
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false 
+  with_items:
+    - "{{ sp }}"
+  tags:
+    - ontap_config_sp_interface
+
+# Create data aggregates
+- name: Create the data aggregates 
+  na_ontap_aggregate:  
+    state: present 
+    name: "{{item.0.aggr_name}}" 
+    disk_count: "{{item.0.diskcount}}" 
+    nodes: "{{item.1}}"
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false  
+  with_together: 
+    - "{{data_aggregates}}"
+    - "{{nodes}}"
+  tags:
+    - ontap_create_data_aggr
+
+#Ensure the cluster HA status
+- name: Ensure cluster HA status
+  na_ontap_cluster_ha: 
+    state: present 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false 
+  tags:
+    - ontap_check_cluster_ha
+
+#Disable flow control on the 10GbE/ 40GbE / 100GbE ports
+- name: Disable flow control on the 10GbE, 40GbE and 100GbE ports 
+  na_ontap_net_port: 
+    state: present 
+    flowcontrol_admin: none 
+    node: "{{item.0.node_name}}" 
+    port: "{{item.1}}"
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false 
+  with_subelements: 
+    - "{{node_ports}}"
+    - ports
+  tags:
+    - ontap_disable_flowcontrol
+
+#Enable CDP on the Storage Controller Nodes
+- name: Enable CDP on the Storage Controller Nodes
+  na_ontap_command: 
+    command: "['node', 'run', '-node', '{{item}}', 'options', 'cdpd.enable', 'on']"
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false 
+  with_items:
+    - "{{nodes}}"
+  tags:
+    - ontap_enable_cdp
+
+#Enable LLDP on the Storage Controller Nodes
+- name: Enable LLDP on the Storage Controller Nodes
+  na_ontap_command: 
+    command: "['node', 'run', '-node', '{{item}}', 'options', 'lldp.enable', 'on']"
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false 
+  with_items:
+    - "{{nodes}}"
+  tags:
+    - ontap_enable_lldp
+
+# Configure DNS
+- name: Configure DNS
+  na_ontap_dns: 
+    state: present 
+    vserver: "{{cluster_name}}" 
+    nameservers: "{{dns_server}}" 
+    domains: "{{dns_domain}}" 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false
+    skip_validation: true
+  tags:
+    - ontap_config_dns
+
+# Configure NTP server
+- name: Configure NTP
+  na_ontap_ntp: 
+    state: present 
+    server_name: "{{item}}" 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false 
+  with_items:
+    - "{{ntp_server}}"
+  tags:
+    - ontap_config_ntp
+
+- name: Enable Takeover for Storage Failover
+  na_ontap_command: 
+    command: "['storage', 'failover', 'modify', '-node', '{{item}}', '-enabled', 'true']"
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false 
+  with_items:
+    - "{{nodes}}"
+  tags:
+    - ontap_validate_storage_failover_state
+
+- name: Set Cluster's Timezone
+  na_ontap_command: 
+    command: "['cluster', 'date', 'modify', '-timezone', '{{timezone}}']"
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false 
+  tags:
+    - ontap_set_timezone
+
+- name: Enable Hardware assist failover on Node A
+  na_ontap_command: 
+    command: "['storage', 'failover', 'modify', '-node', '{{nodes[0]}}', '-hwassist', 'true', '-hwassist-partner-ip', '{{ontap_b}}']"
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false
+  tags:
+    - ontap_enable_hwassist_a
+
+- name: Enable Hardware assist failover on Node B
+  na_ontap_command: 
+    command: "['storage', 'failover', 'modify', '-node', '{{nodes[1]}}', '-hwassist', 'true', '-hwassist-partner-ip', '{{ontap_a}}']"
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false
+  tags:
+    - ontap_enable_hwassist_b
+
+- name: Enable NetApp AutoSupport
+  na_ontap_autosupport: 
+    mail_hosts: "{{autosupport_vars.mail_hosts}}" 
+    node_name: "{{item}}" 
+    noteto: "{{autosupport_vars.noteto}}" 
+    transport: https 
+    post_url: "{{autosupport_vars.post_url | default(omit)}}" 
+    support: yes 
+    state: present 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    https: true 
+    validate_certs: false
+  with_items:
+    - "{{nodes}}"
+  tags:
+    - ontap_config_autosupport
+
+#Add ONTAP Licenses
+- name: Add licenses 
+  na_ontap_license:
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    state: present
+    https: true
+    validate_certs: false
+    license_codes: "{{ ontap_license }}"
+  tags:
+    - ontap_license
+
+# Configure SNMP
+- name: Configure SNMP contact
+  na_ontap_command:
+    command: ['snmp', 'contact', '{{snmp_contact}}']
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    https: true
+    validate_certs: false
+  when: enable_snmp == true
+  tags:
+    - ontap_config_snmp
+
+- name: Configure SNMP location
+  na_ontap_command:
+    command: ['snmp', 'location', '{{snmp_location}}']
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    https: true
+    validate_certs: false
+  when: enable_snmp == true
+  tags:
+    - ontap_config_snmp
+
+- name: Configure SNMP init value
+  na_ontap_command:
+    command: ['snmp', 'init', '1']
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    https: true
+    validate_certs: false
+  when: enable_snmp == true
+  tags:
+    - ontap_config_snmp
+
+- name: Enable SNMP
+  na_ontap_command:
+    command: ['options', 'snmp.enable', 'on']
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    https: true
+    validate_certs: false
+  when: enable_snmp == true
+  tags:
+    - ontap_config_snmp
+
+- name: Create SNMP traphost
+  netapp.ontap.na_ontap_snmp_traphosts:
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    state: present
+    ip_address: "{{traphost_ip}}"
+    https: true
+    validate_certs: false
+  when: 
+    - enable_snmp == true 
+    - traphost_ip != ""
+    - traphost_ip != none
+  tags:
+    - ontap_config_snmp
+
+# Configure SNMPv1 Access
+- name: Configure SNMP Access
+  na_ontap_snmp:
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    state: present
+    community_name: "{{snmp_community}}"
+    access_control: 'ro'
+    https: true
+    validate_certs: false
+  when: enable_snmp == true
+  tags:
+    - ontap_config_snmp_access

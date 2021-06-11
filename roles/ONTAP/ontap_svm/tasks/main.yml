@@ -1,0 +1,175 @@
+#Create the aggr list variable for the OpenShift SVM
+- name: Create the aggr list variable for the OpenShift SVM
+  set_fact:
+    aggr_list: "{{ aggr_list }} + [ '{{item.aggr_name}}']"
+  with_items:
+    - "{{data_aggregates}}"
+  failed_when: item.aggr_name == None or item.aggr_name == ""
+  tags:
+    - ontap_config_svm
+
+# See the aggr list
+- name: See the aggr list
+  debug: var=aggr_list
+  tags:
+    - ontap_config_svm
+
+# Create the OpenShift SVM with required protocols
+- name: Create the OpenShift SVM with specified protocols enabled
+  na_ontap_svm:
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    state: present
+    name: "{{ocp_svm}}"
+    root_volume: "{{ocp_root_volume}}"
+    root_volume_aggregate: "{{data_aggregates[0].aggr_name}}"
+    root_volume_security_style: unix
+    allowed_protocols: "{{allowed_protocols}}"
+    aggr_list: "{{aggr_list}}"
+    https: true
+    validate_certs: false
+  failed_when: data_aggregates[0].aggr_name == None or data_aggregates[0].aggr_name == "" or allowed_protocols == None or aggr_list == []
+  tags:
+    - ontap_config_svm
+
+# Enable NFS protocol
+- name: Enable NFS protcol
+  na_ontap_nfs: 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    state: present 
+    vserver: "{{ocp_svm}}"
+    service_state: started 
+    udp: disabled 
+    https: true 
+    validate_certs: false
+  when:
+    - "('nfs' in allowed_protocols)"
+  tags:
+    - ontap_config_svm
+
+# Create mirror volumes for the root volume
+- name: Create the load-sharing mirror volume for the root volume
+  na_ontap_volume: 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    state: present 
+    vserver: "{{ocp_svm}}" 
+    name: "{{item.1.mirror_volume}}"  
+    aggregate_name: "{{item.0.aggr_name}}" 
+    size: 1  
+    type: DP 
+    https: true 
+    validate_certs: false
+  with_together:
+    - "{{data_aggregates}}"
+    - "{{mirror_volumes}}"
+  tags:
+    - ontap_ls_mirror_volumes
+
+#Create Job schedule for the root volume
+- name: Create a job schedule for the snapmirror of root volume
+  na_ontap_job_schedule: 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    state: present 
+    name: "{{item.job_name}}" 
+    job_minutes: "{{item.job_minutes}}" 
+    https: true 
+    validate_certs: false
+  with_items:
+    - "{{job_schedule}}"
+  tags:
+    - ontap_config_job_schedule
+
+# Create the SnapMirror relationship for the OpenShift SVM
+- name: Create the SnapMirror relationships for the OpenShift SVM
+  na_ontap_snapmirror:
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    state: present
+    source_volume: "{{ ocp_root_volume }}"
+    destination_volume: "{{ item.mirror_volume }}"
+    source_vserver: "{{ ocp_svm }}"
+    destination_vserver: "{{ ocp_svm }}"
+    relationship_type: load_sharing
+    schedule: "{{ job_schedule.0.job_name }}"
+    https: true
+    validate_certs: false
+  with_items:
+    - "{{mirror_volumes}}"
+  tags:
+    - ontap_snapmirror_relationship
+
+# Initialize the mirroring relationship
+- name: Initialize the mirroring relationship
+  na_ontap_snapmirror:
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    state: present
+    source_path: "{{ ocp_svm }}: {{ ocp_root_volume }}"
+    destination_path: "{{ ocp_svm }}:{{ item.mirror_volume }}"
+    https: true
+    validate_certs: false
+  with_items:
+    - "{{mirror_volumes}}"
+  tags:
+    - ontap_snapmirror_relationship
+
+#Create and enable iSCSI service
+- name: Create and enable iSCSI service
+  na_ontap_iscsi: 
+    hostname: "{{inventory_hostname}}" 
+    username: "{{username}}" 
+    password: "{{password}}" 
+    state: present 
+    vserver: "{{ocp_svm}}" 
+    service_state: started 
+    https: true 
+    validate_certs: false
+  when: "('iscsi' in allowed_protocols)"
+  tags:
+    - ontap_enable_iscsi_service
+
+#Set the password for vsadmin first. Account cannot be unlocked without password
+- name: Set password for vsadmin user
+  na_ontap_user:
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    state: present
+    vserver: "{{ocp_svm}}"
+    applications: http,ontapi,ssh
+    authentication_method: password
+    role_name: vsadmin
+    lock_user: yes
+    name: vsadmin
+    set_password: "{{vsadmin_password}}"
+    https: true
+    validate_certs: false
+  tags:
+    - ontap_unlock_svm_sdmin
+
+#Unlock vsadmin user
+- name: Unlock vsadmin user
+  na_ontap_user:
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    state: present
+    vserver: "{{ocp_svm}}"
+    applications: http,ontapi,ssh
+    authentication_method: password
+    role_name: vsadmin
+    lock_user: no
+    name: vsadmin
+    https: true
+    validate_certs: false
+  tags:
+    - ontap_unlock_svm_sdmin
