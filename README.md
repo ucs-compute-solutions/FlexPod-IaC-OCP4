@@ -1,4 +1,4 @@
-
+![image](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)
 # FlexPod Converged Infrastructure deployment using Ansible for OpenShift Container Platform 4 bare-metal IPI installation
 
  This repository is for FlexPod automated deployment covering the following to support OpenShift COntainer platform 4 bare-metal:
