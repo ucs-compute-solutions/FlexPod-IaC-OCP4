@@ -7,7 +7,7 @@
  3. NetApp AFF A-Series
 
 This repository contains Ansible playbooks to configure Cisco Nexus, Cisco UCS and NetApp ONTAP to prepare the bare-metal infrastructure for OCP4 installation. This repository can be used for setting up Cisco devices as well as NetApp AFF as covered in the following Cisco Validated Design (CVD):
-https://www.cisco.com/c/en/us/td/docs/unified_computing/ucs/UCS_CVDs/flexpod_redhat-OCP.html
+https://www.cisco.com/c/en/us/td/docs/unified_computing/ucs/UCS_CVDs/flexpod_iac_redhat_openshift.html
 
 ![image](https://user-images.githubusercontent.com/67762449/120867979-09b09880-c561-11eb-9407-5fa624577717.png)
 
